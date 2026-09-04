@@ -7,19 +7,51 @@ usuarios, control de conflictos de horario y autenticación JWT.
 
 Misma arquitectura en capas que los dos proyectos anteriores del portafolio:
 
-```
-Frontend (HTML/JS)
-      ↓
-Controller (REST API)
-      ↓
-Service (lógica de negocio)
-      ↓
-Repository (Spring Data JPA)
-      ↓
-Base de datos (MySQL)
+```mermaid
+flowchart TD
+    A[Frontend HTML/JS] -->|peticiones HTTP fetch| B[Controller - REST API]
+    B --> C[Service - lógica de negocio]
+    C --> D[Repository - Spring Data JPA]
+    D --> E[(Base de datos MySQL)]
 ```
 
 ## Modelo de datos
+
+```mermaid
+erDiagram
+    ROL ||--o{ USUARIO : tiene
+    USUARIO ||--o{ RESERVA : realiza
+    SERVICIO ||--o{ RESERVA : define
+    RECURSO ||--o{ RESERVA : atiende
+
+    ROL {
+        Long id
+        String nombre
+    }
+    USUARIO {
+        Long id
+        String nombre
+        String email
+        String password
+    }
+    SERVICIO {
+        Long id
+        String nombre
+        Integer duracionMinutos
+        Double precio
+    }
+    RECURSO {
+        Long id
+        String nombre
+        String descripcion
+    }
+    RESERVA {
+        Long id
+        LocalDateTime horaInicio
+        LocalDateTime horaFin
+        String estado
+    }
+```
 
 - **Usuario** — pertenece a un **Rol** (ADMIN o CLIENTE)
 - **Servicio** — lo que se reserva (nombre, duración en minutos, precio)
