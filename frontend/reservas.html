@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reservas</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f3f4f6; }
+        input { padding: 6px; margin: 4px 4px 4px 0; }
+        button { padding: 8px 14px; background: #7c3aed; color: white; border: none; cursor: pointer; }
+        .cancelar { background: #dc2626; padding: 4px 10px; font-size: 12px; }
+        .form-box { background: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .error { background: #fef2f2; border: 1px solid #dc2626; color: #991b1b; padding: 10px; border-radius: 6px; margin-top: 10px; }
+        .cancelada { color: #999; text-decoration: line-through; }
+    </style>
+</head>
+<body>
+    <h2>Mis reservas <span style="font-size:14px; color:#666;" id="usuarioActual"></span></h2>
+
+    <div class="form-box">
+        <h3>Nueva reserva</h3>
+        <input id="servicioId" type="number" placeholder="ID Servicio">
+        <input id="recursoId" type="number" placeholder="ID Recurso">
+        <input id="horaInicio" type="datetime-local">
+        <button onclick="crearReserva()">Reservar</button>
+        <div id="mensaje"></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Servicio</th><th>Recurso</th><th>Inicio</th><th>Fin</th><th>Estado</th><th></th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('usuarioActual').innerText =
+            '— ' + (sessionStorage.getItem('usuarioNombre') || 'invitado');
+
+        const usuarioId = sessionStorage.getItem('usuarioId');
+
+        async function cargarReservas() {
+            const reservas = await apiGet('/reservas/usuario/' + usuarioId);
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            reservas.forEach(r => {
+                const cancelada = r.estado === 'CANCELADA';
+                tbody.innerHTML += `
+                    <tr class="${cancelada ? 'cancelada' : ''}">
+                        <td>${r.id}</td>
+                        <td>${r.servicio.nombre}</td>
+                        <td>${r.recurso.nombre}</td>
+                        <td>${new Date(r.horaInicio).toLocaleString()}</td>
+                        <td>${new Date(r.horaFin).toLocaleString()}</td>
+                        <td>${r.estado}</td>
+                        <td>${cancelada ? '' : `<button class="cancelar" onclick="cancelar(${r.id})">Cancelar</button>`}</td>
+                    </tr>`;
+            });
+        }
+
+        async function crearReserva() {
+            const mensajeDiv = document.getElementById('mensaje');
+            mensajeDiv.innerHTML = '';
+            try {
+                await apiPost('/reservas', {
+                    usuarioId: parseInt(usuarioId),
+                    servicioId: parseInt(document.getElementById('servicioId').value),
+                    recursoId: parseInt(document.getElementById('recursoId').value),
+                    horaInicio: document.getElementById('horaInicio').value
+                });
+                cargarReservas();
+            } catch (err) {
+                mensajeDiv.innerHTML = `<div class="error">${err.message}</div>`;
+            }
+        }
+
+        async function cancelar(id) {
+            await apiPut('/reservas/' + id + '/cancelar');
+            cargarReservas();
+        }
+
+        cargarReservas();
+    </script>
+</body>
+</html>
