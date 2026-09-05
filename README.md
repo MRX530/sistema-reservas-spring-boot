@@ -1,11 +1,11 @@
 # Sistema de Reservas
 
-Proyecto de portafolio: sistema web genérico de reservas/turnos con múltiples
+sistema web de reservas/turnos con múltiples
 usuarios, control de conflictos de horario y autenticación JWT.
 
 ## Arquitectura
 
-Misma arquitectura en capas que los dos proyectos anteriores del portafolio:
+Misma arquitectura en capas:
 
 ```mermaid
 flowchart TD
@@ -68,10 +68,6 @@ dos intervalos de tiempo se traslapan, usando la fórmula estándar:
 r.horaInicio < fin_nueva  AND  r.horaFin > inicio_nueva
 ```
 
-En palabras simples: una reserva existente choca con la nueva si **empieza antes
-de que la nueva termine** y **termina después de que la nueva empieza**. Cualquier
-otro caso (una termina justo cuando la otra empieza, o no se tocan) no es conflicto.
-
 En `ReservaService.crearReserva()`:
 1. Calcula la hora de fin sumando la duración del `Servicio` a la hora de inicio
 2. Busca conflictos para ese `Recurso` en ese rango
@@ -82,10 +78,6 @@ En `ReservaService.crearReserva()`:
 4. El `GlobalExceptionHandler` convierte esa excepción en un `409 Conflict` —
    el código HTTP diseñado exactamente para este tipo de error.
 
-**Punto para destacar en una entrevista:** los tres proyectos del portafolio manejan
-sus reglas de negocio de forma distinta a propósito — bloqueo total (inventario),
-solo alerta (finanzas), bloqueo por conflicto de recursos (reservas). Muestra que
-la solución se piensa según el dominio, no se copia igual en todos lados.
 
 ## Seguridad
 
@@ -142,10 +134,3 @@ reservas-app/
 `mvn test` desde `backend/`. Cubre: reserva sin conflictos, reserva que choca
 con otra existente, reserva justo después de que termina otra (no es conflicto),
 servicio inexistente, y cancelación de reserva.
-
-## Próximos pasos sugeridos
-
-- Endpoint para ver la disponibilidad de un recurso en un rango de fechas
-  (útil para mostrar un calendario en el frontend)
-- Notificaciones (recordatorio antes de la hora de la reserva)
-- Reglas de horario de atención (que no se pueda reservar fuera del horario del negocio)
